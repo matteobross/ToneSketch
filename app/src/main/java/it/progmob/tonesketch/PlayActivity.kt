@@ -63,7 +63,7 @@ class PlayActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
     }
 
-    // --- NUOVA FUNZIONE PER RINOMINARE ---
+    // --- FUNZIONE PER RINOMINARE ---
     private fun showRenameDialog(file: File) {
         val editText = EditText(this)
         // Mostriamo il nome attuale senza l'estensione .m4a per comodità

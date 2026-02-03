@@ -18,8 +18,7 @@ class ArrangerActivity : AppCompatActivity() {
     private lateinit var txtKey: TextView
     private lateinit var txtBpm: TextView
     private lateinit var spinnerProgression: Spinner
-    // Nota: Se hai sostituito i RadioButton con il Sequencer nell'XML,
-    // rimuovi i riferimenti a radioDrums. Qui li tengo per gestire i Preset se esistono ancora.
+
     private var radioDrums: RadioGroup? = null
     private lateinit var btnPlay: Button
     private lateinit var btnStop: Button
@@ -41,7 +40,7 @@ class ArrangerActivity : AppCompatActivity() {
     private var volPiano = 0.8f
     private var volVoice = 1.0f
 
-    // Variabili Sequencer (Drum Machine)
+    // Variabili Sequencer- Drum Machine
     // 3 Righe (Kick, Snare, HiHat) x 16 Step
     private val drumGrid = Array(3) { BooleanArray(16) }
     private val sequencerButtons = ArrayList<ToggleButton>()
@@ -65,19 +64,18 @@ class ArrangerActivity : AppCompatActivity() {
         txtKey = findViewById(R.id.txtKey)
         txtBpm = findViewById(R.id.txtBpm)
         spinnerProgression = findViewById(R.id.spinnerProgression)
-        // radioDrums = findViewById(R.id.radioDrums) // Decommenta se usi ancora i RadioButton per i preset
+        // radioDrums = findViewById(R.id.radioDrums) //se torno ai RadioButton per i preset
         btnPlay = findViewById(R.id.btnPlay)
         btnStop = findViewById(R.id.btnStop)
         txtChordList = findViewById(R.id.txtChordList)
         btnFretboard = findViewById(R.id.btnFretboard)
 
         // COSTRUZIONE SEQUENCER (Griglia Batteria)
-        // Assicurati che nel layout activity_arranger.xml ci siano i container:
-        // drumLabelsContainer e sequencerGrid
+
         try {
             buildSequencer()
         } catch (e: Exception) {
-            // Se l'XML non è ancora aggiornato col sequencer, evitiamo il crash
+            // se faccio cerashiare il build sequenser
             Toast.makeText(this, "Sequencer UI non trovata nell'XML", Toast.LENGTH_SHORT).show()
         }
 
@@ -104,7 +102,7 @@ class ArrangerActivity : AppCompatActivity() {
         spinnerProgression.adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, progressions)
         spinnerProgression.setSelection(1) // Default Pop
 
-        // 2. Carica Audio (SoundPool e Voice)
+        // 2. Carica Audio (SoundPool e Voice)    da vedere se soundpool è il meglio
         soundPool = SoundPool.Builder().setMaxStreams(10).build()
         loadSounds()
 
@@ -124,7 +122,7 @@ class ArrangerActivity : AppCompatActivity() {
         btnStop.setOnClickListener { stopLoop() }
         btnFretboard.setOnClickListener { showFretboard() }
 
-        // Gestione Preset (Opzionale: se hai i RadioButton, li usiamo per caricare la griglia)
+
 
 
         // Carica un preset di default all'avvio
@@ -132,6 +130,29 @@ class ArrangerActivity : AppCompatActivity() {
 
         // --- MIXER LISTENERS (Volumi) ---
         setupMixer()
+
+        // --- GESTIONE PRESET BATTERIA ---
+        val spinnerDrumStyle = findViewById<Spinner>(R.id.spinnerDrumStyle)
+        // I nomi che vedrà l'utente
+        val styles = listOf("Pop", "Rock", "Reggae", "Svuota")
+
+        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, styles)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        spinnerDrumStyle.adapter = adapter
+
+        spinnerDrumStyle.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                // Prende il nome (es. "Pop"), lo rende minuscolo ("pop") e lo passa alla funzione
+                val selectedStyle = styles[position].lowercase()
+
+                //  il caso "svuota" , nel codice si chiama "mute"
+                val styleCommand = if (selectedStyle == "svuota") "mute" else selectedStyle
+
+                loadDrumPreset(styleCommand)
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     private fun setupMixer() {
@@ -139,8 +160,8 @@ class ArrangerActivity : AppCompatActivity() {
         val seekPiano = findViewById<SeekBar>(R.id.seekVolPiano)
         val seekVoice = findViewById<SeekBar>(R.id.seekVolVoice)
 
-        // Se non hai ancora aggiunto le SeekBar all'XML, questi saranno null.
-        // Usiamo ?.let per evitare crash se mancano.
+
+        // Usiamo ?.let per evitare crash se mancano.   gemini, da capire come funzionano i "?"
         seekDrums?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 volDrums = progress / 100f
@@ -173,7 +194,7 @@ class ArrangerActivity : AppCompatActivity() {
         val labelsContainer = findViewById<LinearLayout>(R.id.drumLabelsContainer)
         val gridContainer = findViewById<LinearLayout>(R.id.sequencerGrid)
 
-        // Se l'XML non ha questi ID, usciamo
+        // per sicurezza, se l'XML non ha questi ID, usciamo
         if (labelsContainer == null || gridContainer == null) return
 
         val instruments = listOf("Kick", "Snare", "HiHat")
@@ -224,6 +245,8 @@ class ArrangerActivity : AppCompatActivity() {
             gridContainer.addView(rowLayout)
         }
     }
+
+
 
     private fun loadDrumPreset(style: String) {
         // Resetta tutto
@@ -368,7 +391,7 @@ class ArrangerActivity : AppCompatActivity() {
         return Pair(chordRoot, chordType)
     }
 
-    // --- VISUALIZZATORE CHITARRA (Versione Avanzata) ---
+    // --- VISUALIZZATORE CHITARRA (Versione gemini) ---
     private fun showFretboard() {
         try {
             val dialog = BottomSheetDialog(this)
