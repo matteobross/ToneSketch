@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="32dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="ToneSketch"
+        android:textSize="40sp"
+        android:textStyle="bold"
+        android:textColor="@color/black"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Il tuo arrangiatore personale"
+        android:textSize="18sp"
+        android:layout_marginBottom="48dp"/>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="1. Registra una melodia\n2. Io analizzo tonalità e tempo\n3. L'app crea l'arrangiamento"
+        android:textSize="16sp"
+        android:lineSpacingExtra="6dp"
+        android:gravity="center"
+        android:layout_marginBottom="48dp"/>
+
+    <Button
+        android:id="@+id/btnStart"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:text="INIZIA"
+        android:textSize="18sp"/>
+
+</LinearLayout>
