@@ -4,7 +4,9 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Button
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -47,11 +49,11 @@ class PlayActivity : AppCompatActivity() {
             files,
             onPlay = { file -> playRecording(file) },
             onUpload = { file -> uploadAudio(file) },
+            onRename = { file -> showRenameDialog(file) }, // <--- Logica Rinomina
             onDelete = { file ->
-                // LOGICA DI ELIMINAZIONE
                 if (file.exists() && file.delete()) {
                     Toast.makeText(this, "File eliminato", Toast.LENGTH_SHORT).show()
-                    loadFiles() // Ricarica la lista
+                    loadFiles()
                 } else {
                     Toast.makeText(this, "Errore eliminazione", Toast.LENGTH_SHORT).show()
                 }
@@ -59,6 +61,34 @@ class PlayActivity : AppCompatActivity() {
         )
 
         recyclerView.adapter = adapter
+    }
+
+    // --- NUOVA FUNZIONE PER RINOMINARE ---
+    private fun showRenameDialog(file: File) {
+        val editText = EditText(this)
+        // Mostriamo il nome attuale senza l'estensione .m4a per comodità
+        editText.setText(file.nameWithoutExtension)
+
+        AlertDialog.Builder(this)
+            .setTitle("Rinomina file")
+            .setMessage("Inserisci il nuovo nome:")
+            .setView(editText)
+            .setPositiveButton("Salva") { _, _ ->
+                val newName = editText.text.toString().trim()
+                if (newName.isNotEmpty()) {
+                    // Manteniamo l'estensione .m4a
+                    val newFile = File(file.parent, "$newName.m4a")
+
+                    if (file.renameTo(newFile)) {
+                        Toast.makeText(this, "Rinominato!", Toast.LENGTH_SHORT).show()
+                        loadFiles() // Ricarica la lista per vedere il cambio
+                    } else {
+                        Toast.makeText(this, "Errore: nome non valido o esistente", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+            .setNegativeButton("Annulla", null)
+            .show()
     }
 
     private fun playRecording(file: File) {
@@ -108,10 +138,8 @@ class PlayActivity : AppCompatActivity() {
 
                         try {
                             val json = JSONObject(jsonString)
-                            // Prepariamo l'intent per cambiare activity
                             val intent = Intent(this@PlayActivity, ArrangerActivity::class.java)
 
-                            // Passiamo i dati: JSON completo e percorso audio
                             intent.putExtra("analysis_json", jsonString)
                             intent.putExtra("voice_path", file.absolutePath)
 

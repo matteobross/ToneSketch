@@ -13,12 +13,14 @@ class FileAdapter(
     private val files: List<File>,
     private val onPlay: (File) -> Unit,
     private val onUpload: (File) -> Unit,
+    private val onRename: (File) -> Unit, // <--- NUOVO PARAMETRO
     private val onDelete: (File) -> Unit
 ) : RecyclerView.Adapter<FileAdapter.FileViewHolder>() {
 
     class FileViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val txtName: TextView = view.findViewById(R.id.txtFileName)
         val btnUpload: Button = view.findViewById(R.id.btnUpload)
+        val btnRename: ImageView = view.findViewById(R.id.btnRename) // <--- Riferimento Matita
         val btnDelete: ImageView = view.findViewById(R.id.btnDelete)
     }
 
@@ -37,6 +39,9 @@ class FileAdapter(
 
         // Click su Analizza -> Upload
         holder.btnUpload.setOnClickListener { onUpload(file) }
+
+        // Click su Rinomina -> Rename
+        holder.btnRename.setOnClickListener { onRename(file) }
 
         // Click sul Cestino -> Elimina
         holder.btnDelete.setOnClickListener { onDelete(file) }

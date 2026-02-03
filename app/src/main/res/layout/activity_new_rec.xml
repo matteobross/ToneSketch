@@ -10,16 +10,68 @@
         android:id="@+id/txtStatus"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Pronto a registrare"
+        android:text="Registratore"
         android:textSize="22sp"
-        android:layout_marginBottom="32dp"/>
+        android:layout_marginBottom="16dp"/>
+
+    <com.google.android.material.switchmaterial.SwitchMaterial
+        android:id="@+id/switchMetronome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Usa Metronomo e Durata Fissa"
+        android:textSize="16sp"
+        android:layout_marginBottom="16dp"/>
+
+    <LinearLayout
+        android:id="@+id/containerSettings"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:visibility="gone"
+        android:layout_marginBottom="24dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="24dp">
+            <TextView text="BPM" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <EditText
+                android:id="@+id/editBpm"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="120"
+                android:textAlignment="center"
+                android:textSize="18sp"/>
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center">
+            <TextView text="BATTUTE" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+            <EditText
+                android:id="@+id/editBars"
+                android:layout_width="80dp"
+                android:layout_height="wrap_content"
+                android:inputType="number"
+                android:text="4"
+                android:textAlignment="center"
+                android:textSize="18sp"/>
+        </LinearLayout>
+    </LinearLayout>
 
     <Button
         android:id="@+id/btnRecord"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:text="REC"
-        android:textSize="24sp"
+        android:textSize="32sp"
+        android:textStyle="bold"
         android:backgroundTint="@android:color/holo_red_light"
         android:layout_marginBottom="24dp"/>
 
