@@ -32,8 +32,7 @@
                 android:text="Key: C"
                 android:textSize="20sp"
                 android:padding="16dp"
-                android:background="#333333"
-                android:textColor="#FFFFFF"
+                android:background="#EEE"
                 android:layout_marginEnd="16dp"/>
 
             <TextView
@@ -43,29 +42,43 @@
                 android:text="BPM: 120"
                 android:textSize="20sp"
                 android:padding="16dp"
-                android:background="#333333"
-                android:textColor="#FFFFFF"/>
+                android:background="#EEE"/>
         </LinearLayout>
 
         <TextView
-            android:text="Stile Batteria"
+            android:text="Drum Sequencer (Scorri per modificare)"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"/>
+            android:layout_marginTop="8dp"
+            android:textStyle="bold"/>
 
-        <RadioGroup
-            android:id="@+id/radioDrums"
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:gravity="center"
-            android:layout_marginBottom="16dp">
+            android:layout_marginBottom="24dp">
 
-            <RadioButton android:id="@+id/radioPop" android:text="Pop" android:layout_width="wrap_content" android:layout_height="wrap_content" android:checked="true"/>
-            <RadioButton android:id="@+id/radioRock" android:text="Rock" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            <RadioButton android:id="@+id/radioReggae" android:text="Reggae" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-            <RadioButton android:id="@+id/radioNone" android:text="Muto" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
-        </RadioGroup>
+            <LinearLayout
+                android:id="@+id/drumLabelsContainer"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingEnd="8dp">
+            </LinearLayout>
+
+            <HorizontalScrollView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/sequencerGrid"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+                </LinearLayout>
+            </HorizontalScrollView>
+        </LinearLayout>
 
         <TextView
             android:text="Progressione Piano"
@@ -76,12 +89,13 @@
             android:id="@+id/spinnerProgression"
             android:layout_width="match_parent"
             android:layout_height="50dp"
-            android:layout_marginBottom="32dp"/>
+            android:layout_marginBottom="24dp"/>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="center">
+            android:gravity="center"
+            android:layout_marginBottom="16dp">
 
             <Button
                 android:id="@+id/btnPlay"
@@ -104,18 +118,81 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="VISUALIZZA CHITARRA 🎸"
-            android:layout_marginTop="24dp"
-            />
-
+            android:backgroundTint="@color/black"
+            android:layout_marginBottom="24dp"/>
 
         <TextView
             android:id="@+id/txtChordList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="32dp"
             android:text="Accordi: ..."
             android:fontFamily="monospace"
-            android:padding="16dp"/>
+            android:background="#F0F0F0"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp"/>
+
+        <TextView
+            android:text="Mixer Volumi"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textStyle="bold"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp"
+            android:background="#F9F9F9"
+            android:layout_marginBottom="32dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+                <TextView android:text="Drums" android:width="60dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <SeekBar
+                    android:id="@+id/seekVolDrums"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="80"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+                <TextView android:text="Piano" android:width="60dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <SeekBar
+                    android:id="@+id/seekVolPiano"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="80"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginTop="8dp">
+                <TextView android:text="Voce" android:width="60dp" android:layout_width="wrap_content" android:layout_height="wrap_content"/>
+                <SeekBar
+                    android:id="@+id/seekVolVoice"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:max="100"
+                    android:progress="100"/>
+            </LinearLayout>
+        </LinearLayout>
 
     </LinearLayout>
 </ScrollView>

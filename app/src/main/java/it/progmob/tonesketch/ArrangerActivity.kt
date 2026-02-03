@@ -5,6 +5,7 @@ import android.media.SoundPool
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.bottomsheet.BottomSheetDialog
@@ -13,11 +14,13 @@ import java.io.File
 
 class ArrangerActivity : AppCompatActivity() {
 
-    // UI
+    // UI Elements
     private lateinit var txtKey: TextView
     private lateinit var txtBpm: TextView
     private lateinit var spinnerProgression: Spinner
-    private lateinit var radioDrums: RadioGroup
+    // Nota: Se hai sostituito i RadioButton con il Sequencer nell'XML,
+    // rimuovi i riferimenti a radioDrums. Qui li tengo per gestire i Preset se esistono ancora.
+    private var radioDrums: RadioGroup? = null
     private lateinit var btnPlay: Button
     private lateinit var btnStop: Button
     private lateinit var txtChordList: TextView
@@ -32,6 +35,16 @@ class ArrangerActivity : AppCompatActivity() {
     private var kickId = 0
     private var snareId = 0
     private var hihatId = 0
+
+    // Variabili Mixer (Volumi 0.0 - 1.0)
+    private var volDrums = 0.8f
+    private var volPiano = 0.8f
+    private var volVoice = 1.0f
+
+    // Variabili Sequencer (Drum Machine)
+    // 3 Righe (Kick, Snare, HiHat) x 16 Step
+    private val drumGrid = Array(3) { BooleanArray(16) }
+    private val sequencerButtons = ArrayList<ToggleButton>()
 
     // Loop Logic
     private val handler = Handler(Looper.getMainLooper())
@@ -48,15 +61,25 @@ class ArrangerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_arranger)
 
-        // Init UI
+        // Init UI Standard
         txtKey = findViewById(R.id.txtKey)
         txtBpm = findViewById(R.id.txtBpm)
         spinnerProgression = findViewById(R.id.spinnerProgression)
-        radioDrums = findViewById(R.id.radioDrums)
+        // radioDrums = findViewById(R.id.radioDrums) // Decommenta se usi ancora i RadioButton per i preset
         btnPlay = findViewById(R.id.btnPlay)
         btnStop = findViewById(R.id.btnStop)
         txtChordList = findViewById(R.id.txtChordList)
         btnFretboard = findViewById(R.id.btnFretboard)
+
+        // COSTRUZIONE SEQUENCER (Griglia Batteria)
+        // Assicurati che nel layout activity_arranger.xml ci siano i container:
+        // drumLabelsContainer e sequencerGrid
+        try {
+            buildSequencer()
+        } catch (e: Exception) {
+            // Se l'XML non è ancora aggiornato col sequencer, evitiamo il crash
+            Toast.makeText(this, "Sequencer UI non trovata nell'XML", Toast.LENGTH_SHORT).show()
+        }
 
         // 1. Leggi i dati passati da PlayActivity
         val jsonString = intent.getStringExtra("analysis_json")
@@ -90,25 +113,151 @@ class ArrangerActivity : AppCompatActivity() {
             if (file.exists()) {
                 voicePlayer = MediaPlayer().apply {
                     setDataSource(voicePath)
-                    isLooping = true // La voce va in loop
+                    isLooping = true
                     prepare()
                 }
             }
         }
 
-        // Listeners
+        // Listeners Bottoni
         btnPlay.setOnClickListener { startLoop() }
         btnStop.setOnClickListener { stopLoop() }
         btnFretboard.setOnClickListener { showFretboard() }
+
+        // Gestione Preset (Opzionale: se hai i RadioButton, li usiamo per caricare la griglia)
+
+
+        // Carica un preset di default all'avvio
+        loadDrumPreset("pop")
+
+        // --- MIXER LISTENERS (Volumi) ---
+        setupMixer()
+    }
+
+    private fun setupMixer() {
+        val seekDrums = findViewById<SeekBar>(R.id.seekVolDrums)
+        val seekPiano = findViewById<SeekBar>(R.id.seekVolPiano)
+        val seekVoice = findViewById<SeekBar>(R.id.seekVolVoice)
+
+        // Se non hai ancora aggiunto le SeekBar all'XML, questi saranno null.
+        // Usiamo ?.let per evitare crash se mancano.
+        seekDrums?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                volDrums = progress / 100f
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        seekPiano?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                volPiano = progress / 100f
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+
+        seekVoice?.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                volVoice = progress / 100f
+                try {
+                    voicePlayer?.setVolume(volVoice, volVoice)
+                } catch (e: Exception) {}
+            }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
+    }
+
+    private fun buildSequencer() {
+        val labelsContainer = findViewById<LinearLayout>(R.id.drumLabelsContainer)
+        val gridContainer = findViewById<LinearLayout>(R.id.sequencerGrid)
+
+        // Se l'XML non ha questi ID, usciamo
+        if (labelsContainer == null || gridContainer == null) return
+
+        val instruments = listOf("Kick", "Snare", "HiHat")
+
+        labelsContainer.removeAllViews()
+        gridContainer.removeAllViews()
+        sequencerButtons.clear()
+
+        for (row in 0..2) {
+            // 1. Etichetta Strumento
+            val label = TextView(this)
+            label.text = instruments[row]
+            label.textSize = 14f
+            label.height = 100
+            label.gravity = android.view.Gravity.CENTER_VERTICAL
+            labelsContainer.addView(label)
+
+            // 2. Riga di Bottoni
+            val rowLayout = LinearLayout(this)
+            rowLayout.orientation = LinearLayout.HORIZONTAL
+
+            for (col in 0..15) {
+                val btn = ToggleButton(this)
+                btn.textOn = ""
+                btn.textOff = ""
+                btn.text = ""
+
+                val params = LinearLayout.LayoutParams(100, 100)
+                params.setMargins(2, 2, 2, 2)
+                btn.layoutParams = params
+
+                // Colore beat forti (ogni 4)
+                val baseColor = if (col % 4 == 0) 0xFFCCCCCC.toInt() else 0xFFEEEEEE.toInt()
+                btn.setBackgroundColor(baseColor)
+
+                btn.setOnCheckedChangeListener { _, isChecked ->
+                    drumGrid[row][col] = isChecked
+                    if (isChecked) {
+                        btn.setBackgroundColor(android.graphics.Color.CYAN)
+                    } else {
+                        btn.setBackgroundColor(baseColor)
+                    }
+                }
+
+                sequencerButtons.add(btn)
+                rowLayout.addView(btn)
+            }
+            gridContainer.addView(rowLayout)
+        }
+    }
+
+    private fun loadDrumPreset(style: String) {
+        // Resetta tutto
+        for (btn in sequencerButtons) btn.isChecked = false
+
+        // Helper locale
+        fun t(row: Int, col: Int) {
+            val idx = (row * 16) + col
+            if (idx < sequencerButtons.size) sequencerButtons[idx].isChecked = true
+        }
+
+        when (style) {
+            "pop" -> {
+                t(0, 0); t(0, 8) // Kick
+                t(1, 4); t(1, 12) // Snare
+                for (i in 0..15 step 2) t(2, i) // HiHat ottavi
+            }
+            "rock" -> {
+                t(0, 0); t(0, 10)
+                t(1, 4); t(1, 12)
+                for (i in 0..15 step 4) t(2, i) // HiHat quarti
+            }
+            "reggae" -> {
+                t(0, 8); t(1, 8) // One drop
+                for (i in 2..15 step 4) t(2, i) // HiHat levare
+            }
+        }
     }
 
     private fun loadSounds() {
-        // Carica Batteria
         kickId = soundPool.load(this, R.raw.kick, 1)
         snareId = soundPool.load(this, R.raw.snare, 1)
         hihatId = soundPool.load(this, R.raw.hihat, 1)
 
-        // Carica Piano (Note cromatiche)
         val noteNames = listOf("c","csharp","d","dsharp","e","f","fsharp","g","gsharp","a","asharp","b")
         val displayNames = listOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
 
@@ -126,8 +275,9 @@ class ArrangerActivity : AppCompatActivity() {
         step = 0
         totalSixteenthsPlayed = 0
 
-        // Sincronizza voce
         voicePlayer?.seekTo(0)
+        // Imposta il volume iniziale della voce
+        voicePlayer?.setVolume(volVoice, volVoice)
         voicePlayer?.start()
 
         startTime = System.currentTimeMillis()
@@ -142,7 +292,6 @@ class ArrangerActivity : AppCompatActivity() {
         }
     }
 
-    // --- IL MOTORE RITMICO (Metronomo preciso) ---
     private val loopRunnable = object : Runnable {
         override fun run() {
             if (!isPlaying) return
@@ -153,9 +302,8 @@ class ArrangerActivity : AppCompatActivity() {
             step = (step + 1) % 16
             totalSixteenthsPlayed++
 
-            // Calcolo preciso del tempo per evitare drift
             val msPerBeat = 60000.0 / bpm
-            val stepDuration = msPerBeat / 4.0 // Sedicesimi
+            val stepDuration = msPerBeat / 4.0
             val nextExpectedTime = startTime + (stepDuration * totalSixteenthsPlayed).toLong()
             val now = System.currentTimeMillis()
             var delay = nextExpectedTime - now
@@ -166,47 +314,28 @@ class ArrangerActivity : AppCompatActivity() {
     }
 
     private fun playDrums(step: Int) {
-        val style = when(radioDrums.checkedRadioButtonId) {
-            R.id.radioPop -> "pop"
-            R.id.radioRock -> "rock"
-            R.id.radioReggae -> "reggae"
-            else -> "mute"
-        }
-        if (style == "mute") return
-
-        when (style) {
-            "pop" -> {
-                if (step == 0 || step == 8) soundPool.play(kickId, 1f, 1f, 1, 0, 1f)
-                if (step == 4 || step == 12) soundPool.play(snareId, 1f, 1f, 1, 0, 1f)
-                if (step % 2 == 0) soundPool.play(hihatId, 0.5f, 0.5f, 1, 0, 1f)
-            }
-            "rock" -> {
-                if (step == 0 || step == 10) soundPool.play(kickId, 1f, 1f, 1, 0, 1f)
-                if (step == 4 || step == 12) soundPool.play(snareId, 1f, 1f, 1, 0, 1f)
-                if (step % 4 == 0) soundPool.play(hihatId, 0.6f, 0.6f, 1, 0, 1f)
-            }
-            "reggae" -> {
-                if (step == 8) { soundPool.play(kickId, 1f, 1f, 1, 0, 1f); soundPool.play(snareId, 1f, 1f, 1, 0, 1f) }
-                if (step % 4 == 2) soundPool.play(hihatId, 0.7f, 0.7f, 1, 0, 1f)
-            }
-        }
+        // Ora leggiamo SOLO dalla griglia (che è stata popolata dai preset o a mano)
+        // Usiamo i volumi variabili
+        if (drumGrid[0][step]) soundPool.play(kickId, volDrums, volDrums, 1, 0, 1f)
+        if (drumGrid[1][step]) soundPool.play(snareId, volDrums, volDrums, 1, 0, 1f)
+        // HiHat un po' più basso di default
+        if (drumGrid[2][step]) soundPool.play(hihatId, volDrums * 0.6f, volDrums * 0.6f, 1, 0, 1f)
     }
 
     private fun playHarmony(step: Int) {
         val selectedIdx = spinnerProgression.selectedItemPosition
-        if (selectedIdx == 0) return // Nessun piano
-        if (step % 4 != 0) return // Suona solo sui quarti (ogni 4 sedicesimi)
+        if (selectedIdx == 0) return
+        if (step % 4 != 0) return
 
         val progression = when (selectedIdx) {
-            1 -> listOf("I", "V", "vi", "IV") // Pop classico
-            2 -> listOf("ii", "V", "I", "I")  // Jazz
-            3 -> listOf("vi", "IV", "I", "V") // Emozionale
+            1 -> listOf("I", "V", "vi", "IV")
+            2 -> listOf("ii", "V", "I", "I")
+            3 -> listOf("vi", "IV", "I", "V")
             else -> listOf("I", "V", "vi", "IV")
         }
 
         val chordIndex = (step / 4) % progression.size
         val degree = progression[chordIndex]
-
         val (root, type) = getChordFromDegree(key, degree)
         playChord(root, type)
     }
@@ -219,30 +348,27 @@ class ArrangerActivity : AppCompatActivity() {
         for (interval in intervals) {
             val noteName = allNotes[(rootIdx + interval) % 12]
             val soundId = pianoNotes[noteName]
-            soundId?.let { soundPool.play(it, 0.8f, 0.8f, 1, 0, 1f) }
+            // Usa volPiano
+            soundId?.let { soundPool.play(it, volPiano, volPiano, 1, 0, 1f) }
         }
     }
 
     private fun getChordFromDegree(keyRoot: String, degree: String): Pair<String, String> {
         val allNotes = listOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
         val majorScaleIntervals = listOf(0, 2, 4, 5, 7, 9, 11)
-
         val keyIdx = allNotes.indexOf(keyRoot)
-
         val degreeOffsetMap = mapOf("I" to 0, "ii" to 1, "iii" to 2, "IV" to 3, "V" to 4, "vi" to 5, "vii°" to 6)
         val degreeTypeMap = mapOf("I" to "major", "ii" to "minor", "iii" to "minor", "IV" to "major", "V" to "major", "vi" to "minor")
 
         val scaleStep = degreeOffsetMap[degree] ?: 0
         val semitoneOffset = majorScaleIntervals[scaleStep]
-
         val chordRoot = allNotes[(keyIdx + semitoneOffset) % 12]
         val chordType = degreeTypeMap[degree] ?: "major"
 
         return Pair(chordRoot, chordType)
     }
 
-    // --- FUNZIONI FRETBOARD ---
-
+    // --- VISUALIZZATORE CHITARRA (Versione Avanzata) ---
     private fun showFretboard() {
         try {
             val dialog = BottomSheetDialog(this)
@@ -263,7 +389,6 @@ class ArrangerActivity : AppCompatActivity() {
         }
     }
 
-    // NUOVA VERSIONE GEMINI (Quella attiva)
     private fun generateFretboardVisual(key: String): String {
         val majorScales = mapOf(
             "C" to listOf("C","D","E","F","G","A","B"),
@@ -281,73 +406,107 @@ class ArrangerActivity : AppCompatActivity() {
         )
 
         val scale = majorScales[key] ?: majorScales["C"]!!
-        // Accordatura standard: Low E -> High E
         val tuning = listOf("E","A","D","G","B","E")
         val semitones = listOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
 
         val sb = StringBuilder()
         sb.append("Note scala di $key:\n$scale\n\n")
 
-        // --- 1. COSTRUZIONE HEADER (Numeri tasti) ---
-        sb.append("   ") // Spazio per il nome corda
-        sb.append(" 0 ") // Tasto vuoto
-        sb.append("||")  // Capotasto
-        for (i in 1..12) { // Mostriamo 12 tasti (un'ottava completa)
+        // HEADER
+        sb.append("   ")
+        sb.append(" 0 ")
+        sb.append("||")
+        for (i in 1..12) {
             sb.append(centerText(i.toString(), 5))
             sb.append("|")
         }
         sb.append("\n")
-
-        // Linea di separazione superiore
         sb.append("===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
 
-        // --- 2. COSTRUZIONE CORDE ---
-        // Usiamo reversed() per avere la corda acuta (E cantino) in alto, come nelle Tablature
+        // CORDE
         for (stringNote in tuning.reversed()) {
-
-            // A. Nome della corda (es. "E  ")
             sb.append(centerText(stringNote, 3))
 
-            // B. Nota a vuoto (Tasto 0)
+            // Tasto 0
             if (scale.contains(stringNote)) {
                 sb.append(centerText(stringNote, 3))
             } else {
                 sb.append(" . ")
             }
-
-            // C. Il Capotasto
             sb.append("||")
 
-            // D. I Tasti da 1 a 12
+            // Tasti 1-12
             val startIdx = semitones.indexOf(stringNote)
             for (fret in 1..12) {
                 val currentNoteIdx = (startIdx + fret) % 12
                 val currentNote = semitones[currentNoteIdx]
 
                 if (scale.contains(currentNote)) {
-                    // Se la nota è nella scala, mostrala
                     sb.append(centerText(currentNote, 5))
                 } else {
-                    // Altrimenti mostra la "corda" vuota
                     sb.append(" --- ")
                 }
-                sb.append("|") // Barra del tasto
+                sb.append("|")
             }
-            sb.append("\n") // Fine della corda
+            sb.append("\n")
 
-            // E. Linea orizzontale della griglia (tranne dopo l'ultima corda)
-            if (stringNote != tuning.first()) { // tuning.first() è la Low E (che qui è l'ultima stampata)
+            if (stringNote != tuning.first()) {
                 sb.append("---+---++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+\n")
             }
         }
-
-        // Linea di chiusura inferiore
         sb.append("===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
-
         return sb.toString()
     }
+    /* quest è la schermata vecchia funzionante (COMMENTATA PER RIFERIMENTO)
+       private fun generateFretboardVisual(key: String): String {
+           val majorScales = mapOf(
+               "C" to listOf("C","D","E","F","G","A","B"),
+               // ... (mappa vecchia) ...
+           )
 
-    // Funzione helper per centrare il testo nelle caselle della griglia
+
+           val scale = majorScales[key] ?: majorScales["C"]!!
+           val tuning = listOf("E","A","D","G","B","E")
+           val semitones = listOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
+
+
+           val builder = StringBuilder()
+           builder.append("Note scala di $key:\n$scale\n\n")
+           builder.append("   0  1  2  3  4  5  6  7  8  9 \n")
+
+
+           for (stringNote in tuning.reversed()) {
+               builder.append("$stringNote |")
+
+
+               val startIdx = semitones.indexOf(stringNote)
+
+
+               for (fret in 1..9) {
+                   val currentNoteIdx = (startIdx + fret) % 12
+                   val currentNote = semitones[currentNoteIdx]
+
+
+                   if (scale.contains(currentNote)) {
+                       builder.append(formatNote(currentNote))
+                   } else {
+                       builder.append("---")
+                   }
+                   builder.append("|")
+               }
+               builder.append("\n")
+           }
+           return builder.toString()
+       }
+
+
+       private fun formatNote(note: String): String {
+           return if (note.length == 2) "$note " else " $note "
+       }
+    */
+
+
+
     private fun centerText(text: String, length: Int): String {
         if (text.length >= length) return text
         val padding = (length - text.length) / 2
@@ -359,47 +518,6 @@ class ArrangerActivity : AppCompatActivity() {
         }
         return sb.toString()
     }
-
-    /* quest è la schermata vecchia funzionante (COMMENTATA PER RIFERIMENTO)
-        private fun generateFretboardVisual(key: String): String {
-            val majorScales = mapOf(
-                "C" to listOf("C","D","E","F","G","A","B"),
-                // ... (mappa vecchia) ...
-            )
-
-            val scale = majorScales[key] ?: majorScales["C"]!!
-            val tuning = listOf("E","A","D","G","B","E")
-            val semitones = listOf("C","C#","D","D#","E","F","F#","G","G#","A","A#","B")
-
-            val builder = StringBuilder()
-            builder.append("Note scala di $key:\n$scale\n\n")
-            builder.append("   0  1  2  3  4  5  6  7  8  9 \n")
-
-            for (stringNote in tuning.reversed()) {
-                builder.append("$stringNote |")
-
-                val startIdx = semitones.indexOf(stringNote)
-
-                for (fret in 1..9) {
-                    val currentNoteIdx = (startIdx + fret) % 12
-                    val currentNote = semitones[currentNoteIdx]
-
-                    if (scale.contains(currentNote)) {
-                        builder.append(formatNote(currentNote))
-                    } else {
-                        builder.append("---")
-                    }
-                    builder.append("|")
-                }
-                builder.append("\n")
-            }
-            return builder.toString()
-        }
-
-        private fun formatNote(note: String): String {
-            return if (note.length == 2) "$note " else " $note "
-        }
-    */
 
     override fun onDestroy() {
         super.onDestroy()
