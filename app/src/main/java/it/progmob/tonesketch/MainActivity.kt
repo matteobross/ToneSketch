@@ -13,7 +13,7 @@ class MainActivity : AppCompatActivity() {
         val btnStart = findViewById<Button>(R.id.btnStart)
 
         btnStart.setOnClickListener {
-            // Passiamo alla schermata di registrazione
+            // Passa alla schermata di registrazione
             val intent = Intent(this, NewRecActivity::class.java)
             startActivity(intent)
         }

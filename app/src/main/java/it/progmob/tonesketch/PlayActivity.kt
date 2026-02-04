@@ -105,6 +105,7 @@ class PlayActivity : AppCompatActivity() {
         }
     }
 
+    //caricare al server oracle
     private fun uploadAudio(file: File) {
         Toast.makeText(this, "⏳ Analisi in corso...", Toast.LENGTH_SHORT).show()
 
