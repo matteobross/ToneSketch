@@ -3,39 +3,47 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
-    android:padding="32dp">
+    android:gravity="center_horizontal"
+    android:padding="32dp"
+    android:background="@drawable/sfondo_main">
 
     <TextView
-        android:layout_width="wrap_content"
+        android:layout_width="308dp"
         android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:layout_marginBottom="16dp"
         android:text="ToneSketch"
-        android:textSize="40sp"
-        android:textStyle="bold"
         android:textColor="@color/black"
-        android:layout_marginBottom="16dp"/>
+        android:textSize="57sp"
+        android:textStyle="bold" />
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="300dp"
         android:text="Il tuo arrangiatore personale"
-        android:textSize="18sp"
-        android:layout_marginBottom="48dp"/>
+        android:textSize="25sp"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:layout_marginBottom="48dp"
+        />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="1. Registra una melodia\n2. Io analizzo tonalità e tempo\n3. L'app crea l'arrangiamento"
-        android:textSize="16sp"
-        android:lineSpacingExtra="6dp"
+        android:layout_marginBottom="48dp"
         android:gravity="center"
-        android:layout_marginBottom="48dp"/>
+        android:lineSpacingExtra="6dp"
+        android:text="1. Registra una melodia\n2. Io analizzo tonalità e tempo\n3. L'app crea l'arrangiamento"
+        android:textColor="#00FFFF"
+        android:textSize="16sp"
+        android:textStyle="bold" />
 
     <Button
         android:id="@+id/btnStart"
         android:layout_width="match_parent"
         android:layout_height="60dp"
         android:text="INIZIA"
-        android:textSize="18sp"/>
+        android:textSize="18sp" />
 
 </LinearLayout>
