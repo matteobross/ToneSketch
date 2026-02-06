@@ -8,7 +8,7 @@
     android:background="@drawable/sfondo_main">
 
     <TextView
-        android:layout_width="308dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
         android:layout_marginBottom="16dp"
@@ -35,7 +35,7 @@
         android:gravity="center"
         android:lineSpacingExtra="6dp"
         android:text="1. Registra una melodia\n2. Io analizzo tonalità e tempo\n3. L'app crea l'arrangiamento"
-        android:textColor="#00FFFF"
+        android:textColor="#29B6F6"
         android:textSize="16sp"
         android:textStyle="bold" />
 

@@ -412,6 +412,7 @@ class ArrangerActivity : AppCompatActivity() {
         }
     }
 
+    // --- VISUALIZZATORE CHITARRA (gemini) ---
     private fun generateFretboardVisual(key: String): String {
         val majorScales = mapOf(
             "C" to listOf("C","D","E","F","G","A","B"),
@@ -436,7 +437,7 @@ class ArrangerActivity : AppCompatActivity() {
         sb.append("Note scala di $key:\n$scale\n\n")
 
         // HEADER
-        sb.append("   ")
+        sb.append("|") ; sb.append("   ") ; sb.append("|")
         sb.append(" 0 ")
         sb.append("||")
         for (i in 1..12) {
@@ -444,13 +445,18 @@ class ArrangerActivity : AppCompatActivity() {
             sb.append("|")
         }
         sb.append("\n")
-        sb.append("===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
+        sb.append("+===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
 
-        // CORDE
-        for (stringNote in tuning.reversed()) {
+        // CORDE (Usiamo forEachIndexed per non confondere i due MI)
+        val reversedTuning = tuning.reversed()
+
+        reversedTuning.forEachIndexed { index, stringNote ->
+            // A. Inizio riga
+            sb.append("|")
             sb.append(centerText(stringNote, 3))
+            sb.append("|")
 
-            // Tasto 0
+            // B. Tasto 0
             if (scale.contains(stringNote)) {
                 sb.append(centerText(stringNote, 3))
             } else {
@@ -458,7 +464,7 @@ class ArrangerActivity : AppCompatActivity() {
             }
             sb.append("||")
 
-            // Tasti 1-12
+            // C. Tasti 1-12
             val startIdx = semitones.indexOf(stringNote)
             for (fret in 1..12) {
                 val currentNoteIdx = (startIdx + fret) % 12
@@ -473,14 +479,16 @@ class ArrangerActivity : AppCompatActivity() {
             }
             sb.append("\n")
 
-            if (stringNote != tuning.first()) {
-                sb.append("---+---++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+\n")
+            // D. Linea divisoria (Se NON siamo all'ultima corda)
+            if (index < reversedTuning.size - 1) {
+                sb.append("+---+---++-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----+\n")
             }
         }
-        sb.append("===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
+
+        // Linea di chiusura finale
+        sb.append("+===+===++=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+=====+\n")
         return sb.toString()
-    }
-    /* quest è la schermata vecchia funzionante (COMMENTATA PER RIFERIMENTO)
+    }    /* quest è la schermata vecchia funzionante (COMMENTATA PER RIFERIMENTO)
        private fun generateFretboardVisual(key: String): String {
            val majorScales = mapOf(
                "C" to listOf("C","D","E","F","G","A","B"),
