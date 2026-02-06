@@ -95,7 +95,22 @@ class ArrangerActivity : AppCompatActivity() {
 
         txtKey.text = "Key: $key"
         txtBpm.text = String.format("BPM: %.1f", bpm)
-        txtChordList.text = "Tonalità rilevata: $key"
+       // txtChordList.text = "Tonalità rilevata: $key"
+        if (jsonString != null) {
+            try {
+                val json = JSONObject(jsonString)
+                bpm = json.optDouble("bpm", 120.0)
+                key = json.optString("key", "C")
+            } catch (e: Exception) {
+                // Gestione errore
+            }
+        }
+
+        txtKey.text = "Key: $key"
+        txtBpm.text = String.format("BPM: %.1f", bpm)
+
+        // Invece di scrivere testo statico, chiamiamo la funzione
+        updateChordList(key)
 
         // Setup Spinner Accordi
         val progressions = listOf("Nessun Piano", "I - V - vi - IV", "ii - V - I", "vi - IV - I - V")
@@ -536,7 +551,40 @@ class ArrangerActivity : AppCompatActivity() {
        }
     */
 
+//funzioni per far gli accordi in tonalità
+private fun updateChordList(key: String) {
+    val majorScales = mapOf(
+        "C" to listOf("C","D","E","F","G","A","B"),
+        "G" to listOf("G","A","B","C","D","E","F#"),
+        "D" to listOf("D","E","F#","G","A","B","C#"),
+        "A" to listOf("A","B","C#","D","E","F#","G#"),
+        "E" to listOf("E","F#","G#","A","B","C#","D#"),
+        "B" to listOf("B","C#","D#","E","F#","G#","A#"),
+        "F#" to listOf("F#","G#","A#","B","C#","D#","F"),
+        "F" to listOf("F","G","A","A#","C","D","E"),
+        "Db" to listOf("C#","D#","F","F#","G#","A#","C"),
+        "Ab" to listOf("G#","A#","C","C#","D#","F","G"),
+        "Eb" to listOf("D#","F","G","G#","A#","C","D"),
+        "Bb" to listOf("A#","C","D","D#","F","G","A")
+    )
 
+    val scale = majorScales[key] ?: majorScales["C"]!!
+
+    // cambiato.   Definiamo i suffissi per gli accordi diatonici (Maj, min, min, Maj, Maj, min, dim)
+    // I gradi: 1, 2m, 3m, 4, 5, 6m, 7dim
+    val suffixes = listOf("", "m", "m", "", "", "m", "dim")
+
+    val chords = StringBuilder()
+    for (i in scale.indices) {
+        chords.append(scale[i])    // La nota (es. "D")
+        chords.append(suffixes[i]) // Il tipo (es. "m")
+        if (i < scale.size - 1) {
+            chords.append(" - ")   // Separatore
+        }
+    }
+
+    txtChordList.text = "Accordi in $key:\n$chords"
+}
 
     private fun centerText(text: String, length: Int): String {
         if (text.length >= length) return text
