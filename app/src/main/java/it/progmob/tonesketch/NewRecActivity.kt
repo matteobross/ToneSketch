@@ -200,7 +200,7 @@ class NewRecActivity : AppCompatActivity() {
                 // Flash visivo (Rosso scuro sull'1, Chiaro sugli altri)
                 if (musicalBeat == 1) {
                     btnRecord.setBackgroundColor(getColor(android.R.color.holo_orange_dark))
-                    // Suono Click Forte (Solo se vuoi il click IN CUFFIA durante la rec)
+                    // Da attivare solo se tieni le cuffie
                     // toneGenerator.startTone(ToneGenerator.TONE_SUP_PIP, 50)
                 } else {
                     btnRecord.setBackgroundColor(getColor(android.R.color.holo_orange_light))
@@ -210,10 +210,10 @@ class NewRecActivity : AppCompatActivity() {
 
                 // NOTA SUI SUONI DURANTE LA REGISTRAZIONE:
                 // Ho commentato i suoni durante la fase di registrazione vera e propria (if >= 0).
-                // Perché? Se non usi le cuffie, il microfono registrerà il "BEEP" del telefono
+                // Perché se non usi le cuffie, il microfono registrerà il "BEEP" del telefono
                 // e rovinerà la tua traccia vocale.
-                // Se vuoi il metronomo ANCHE mentre canti, de-commenta le righe `toneGenerator` qui sopra.
-                // Per ora, lascio il suono SOLO nel Count-In (fase < 0).
+                // Se voglio il metronomo ANCHE mentre canti, de-commento le righe `toneGenerator` qui sopra.
+                // Per ora, lascio il suono SOLO nel Count-In (fase < 0), poi magari metto uno switch ma mi sembra stupido
             }
 
             // Avanzamento e Controllo Fine
