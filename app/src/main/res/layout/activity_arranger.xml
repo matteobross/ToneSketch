@@ -128,13 +128,20 @@
             android:text="VISUALIZZA CHITARRA 🎸"
             android:layout_marginBottom="24dp"/>
 
+        <Button
+            android:id="@+id/btnShowChords"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MODALITà CARAOKE"
+            android:backgroundTint="#FF9800"
+            android:layout_marginBottom="12dp"/>
+
         <TextView
             android:id="@+id/txtChordList"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Accordi: ..."
             android:fontFamily="monospace"
-
             android:padding="16dp"
             android:layout_marginBottom="24dp"/>
 
