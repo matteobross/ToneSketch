@@ -23,12 +23,20 @@ class PlayActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private val client = OkHttpClient()
     
-companion object{
-    // TODO: inserisci qui l'indirizzo del tuo server (es. "http://192.168.1.10" oppure un dominio)
-private const val SERVER_URL = "http://url_server"
-private const val ANALYZE_ENDPOINT = "$SERVER_URL:8000/analyze"
-}
+class PlayActivity : AppCompatActivity() {
+
+    private var mediaPlayer: MediaPlayer? = null
+    private lateinit var recyclerView: RecyclerView
+    private val client = OkHttpClient()
+
+    companion object {
+        // TODO: inserisci qui l'indirizzo del tuo server (es. "http://192.168.1.10" oppure un dominio)
+        private const val SERVER_URL = "http://url_server"
+        private const val ANALYZE_ENDPOINT = "$SERVER_URL:8000/analyze"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        ...
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_play)
 
@@ -123,10 +131,10 @@ private const val ANALYZE_ENDPOINT = "$SERVER_URL:8000/analyze"
             )
             .build()
 
-        val request = Request.Builder()
-            .url("http://url_server:8000/analyze")
-            .post(requestBody)
-            .build()
+       val request = Request.Builder()
+    .url(ANALYZE_ENDPOINT)
+    .post(requestBody)
+    .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
