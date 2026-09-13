@@ -119,7 +119,7 @@ class PlayActivity : AppCompatActivity() {
             .build()
 
         val request = Request.Builder()
-            .url("http://84.8.250.185:8000/analyze")
+            .url("http://url_server:8000/analyze")
             .post(requestBody)
             .build()
 
