@@ -17,7 +17,7 @@ sequencer step-by-step.
 > **Relatore:** Prof. Luca Verderame
 > **Candidato:** Matteo Colombo
 >
-> 📑 Le slide della presentazione sono disponibili in [`docs/tesi-slides.pdf`](docs/tesi-slides.pdf).
+> 📑 Le slide della presentazione sono disponibili in [`tesi-slides.pdf`](tesi-slides.pdf).
 
 ## Come funziona
 
